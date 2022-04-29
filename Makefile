@@ -1,5 +1,5 @@
-dataprep: sigesguarda.csv DIVISA_DE_BAIRROS.geojson
-	python dataprep.py
+dataprep: data/sigesguarda.csv data/DIVISA_DE_BAIRROS.geojson
+	python scripts/dataprep.py
 
-app: app.py sigesguarda_cleaned.csv divisa_bairros_cleaned.geojson
+app: app.py data/sigesguarda_cleaned.csv data/divisa_bairros_cleaned.geojson
 	python app.py
