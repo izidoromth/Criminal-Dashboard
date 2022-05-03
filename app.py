@@ -8,7 +8,7 @@ import plotly.express as px
 from pages.styles import *
 from pages.map import *
 
-df = pd.read_csv('./data/sigesguarda_cleaned.csv')
+df = pd.read_csv('./data/gmc/sigesguarda_cleaned.csv')
 f = open('./data/divisa_bairros_cleaned.geojson', encoding='utf-8')
 
 bairros_geojson = json.load(f)
