@@ -1,0 +1,94 @@
+.content {
+  transition: margin-left .5s;
+  margin-left: 16rem;
+  margin-right: 0rem;
+  background-color: #f8f9fa;
+}
+
+.content-full {
+  transition: margin-left .5s;
+  margin-left: 0rem;
+  margin-right: 0rem;
+  padding: 2rem 1rem;
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  position: fixed;
+  top: 62.5;
+  left: 0;
+  bottom: 0;
+  width: 16rem;
+  height: 100%;
+  z-index: 1;
+  overflow-x: hidden;
+  transition: all 0.5s;
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+}
+
+.sidebar-hidden {
+  position: fixed;
+  top: 62.5;
+  left: -16rem;
+  bottom: 0;
+  width: 16rem;
+  height: 100%;
+  z-index: 1;
+  overflow-x: hidden;
+  transition: all 0.5s;
+  padding: 0rem 0rem;
+  background-color: #f8f9fa;
+}
+
+.sidebar-closebutton {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
+
+.slider {
+  width: 49%;
+  padding: 0px 20px 20px 20px;
+  align-self: center;
+}
+
+.histogram_div {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.date-picker {
+  margin-left: 30%;
+}
+
+.navbar-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  margin-left: 0px;
+  flex-wrap: nowrap
+}
+
+.inline {
+  display: inline-block;
+}
+
+.DateInput, .DateInput_1 {
+  border-radius: 4px 0 0 4px !important;
+  background-color: transparent;
+}
+
+.DateInput_input, .DateInput_input_1 {
+  Height: 34px !important;
+  Width: 100% !important;
+  border-radius: inherit;  
+  background-color: transparent;
+  color: white;
+}
+
+.SingleDatePickerInput__withBorder {
+  border: 0px solid #ccc !important;  
+  background-color: transparent;
+}
