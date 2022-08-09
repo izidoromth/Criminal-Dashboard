@@ -1,6 +1,6 @@
 .content {
   transition: margin-left .5s;
-  margin-left: 16rem;
+  margin-left: 18rem;
   margin-right: 0rem;
   background-color: #f8f9fa;
 }
@@ -18,21 +18,21 @@
   top: 62.5;
   left: 0;
   bottom: 0;
-  width: 16rem;
+  width: 18rem;
   height: 100%;
   z-index: 1;
   overflow-x: hidden;
   transition: all 0.5s;
   padding: 0.5rem 1rem;
-  background-color: #f8f9fa;
+  background-color: #deebfc;
 }
 
 .sidebar-hidden {
   position: fixed;
   top: 62.5;
-  left: -16rem;
+  left: -18rem;
   bottom: 0;
-  width: 16rem;
+  width: 18rem;
   height: 100%;
   z-index: 1;
   overflow-x: hidden;
@@ -41,10 +41,10 @@
   background-color: #f8f9fa;
 }
 
-.sidebar-closebutton {
+.sidebar-apply {
   position: absolute;
-  top: 3px;
-  right: 3px;
+  bottom: 10px;
+  right: 10px;
 }
 
 .slider {
@@ -61,6 +61,7 @@
 
 .date-picker {
   margin-left: 30%;
+  color: white
 }
 
 .navbar-container {
@@ -85,10 +86,25 @@
   Width: 100% !important;
   border-radius: inherit;  
   background-color: transparent;
-  color: white;
+  color: inherit;
 }
 
 .SingleDatePickerInput__withBorder {
   border: 0px solid #ccc !important;  
   background-color: transparent;
+}
+
+.filter_item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom:  15px
+}
+
+.custom-tab--selected {
+  color: black;
+  box-shadow: 1px 1px 0px white;
+  border-left: 1px solid lightgrey !important;
+  border-right: 1px solid lightgrey !important;
+  border-top: 0px !important;
 }

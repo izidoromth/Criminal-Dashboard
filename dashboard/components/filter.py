@@ -1,12 +1,22 @@
 import dash_bootstrap_components as dbc
-from dash import callback, Input, Output, State
-from dash import html
+from dash import callback, Input, Output, State, html, dcc
+from datetime import datetime
+from components.filter_item import filter_item
 
 sidebar = html.Div(
 	[
 		html.H4("Painel Criminal"),
-		html.P("Some offcanvas content..."),
-		# dbc.Button("X", id="sidebar-closebutton", n_clicks=0, class_name="sidebar-closebutton")
+		filter_item("Intervalo", 
+			[dcc.DatePickerRange(
+				id='date-range-filter',
+				min_date_allowed=datetime.strptime('01/01/2009','%d/%m/%Y'),
+				max_date_allowed=datetime.strptime('01/01/2022','%d/%m/%Y'),
+				initial_visible_month=datetime.strptime('01/01/2009','%d/%m/%Y'),
+				clearable=True,
+				display_format='DD/MM/YYYY',
+			)]
+		),
+		dbc.Button("Aplicar", id="sidebar-apply", n_clicks=0, class_name="sidebar-apply")
 	],
 	id="sidebar",
 	className="sidebar-hidden"

@@ -2,4 +2,5 @@
 dashboard/__pycache__
 dashboard/pages/__pycache__
 dashboard/components/__pycache__
+dashboard/datasources/__pycache__
 venv/

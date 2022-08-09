@@ -12,12 +12,13 @@ SIDEBAR = {
 
 navbar = dbc.Navbar(
     dbc.Container([
+		dcc.Location(id="location_navbar"),
 		dbc.Button(
 			html.I(className="fa fa-sliders"), 
 			id="open-sidebar",
 			class_name="ms-0"),
-		dbc.NavItem(dbc.NavLink("PCPR", href="/pcpr", class_name="text-white")),
-		dbc.NavItem(dbc.NavLink("GMC", href="/gmc", class_name="text-white")),
+		dbc.NavItem(id="pcpr_navitem", children=dbc.NavLink("PCPR", href="/pcpr", class_name="text-white")),
+		dbc.NavItem(id="gmc_navitem", children=dbc.NavLink("GMC", href="/gmc", class_name="text-white")),
 		dcc.DatePickerSingle(
 			id='my-date-picker-single',
 			display_format='DD, MMM YYYY',
@@ -34,6 +35,19 @@ navbar = dbc.Navbar(
     color="primary",
     dark=True,
 )
+
+@callback(
+	Output("pcpr_navitem","style"),
+	Output("gmc_navitem","style"),
+	Input("location_navbar","href")
+)
+def update_navbar_selected(href):
+	if 'pcpr' in href:
+		return {'background-color':'#3888ff'},{}
+	elif 'gmc' in href:
+		return {},{'background-color':'#3888ff'}
+	else:
+		return {},{}
 
 # @callback(
 # 	Output("navbar-container","style"),
