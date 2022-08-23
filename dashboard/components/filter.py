@@ -1,22 +1,38 @@
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 from dash import callback, Input, Output, State, html, dcc
-from datetime import datetime
+import datetime as dt
 from components.filter_item import filter_item
+from datasources.gmc_datasource import GmcDatasource
+
+gmc_datasource = GmcDatasource.instance()
 
 sidebar = html.Div(
 	[
 		html.H4("Painel Criminal"),
 		filter_item("Intervalo", 
-			[dcc.DatePickerRange(
+			[dmc.DateRangePicker(
 				id='date-range-filter',
-				min_date_allowed=datetime.strptime('01/01/2009','%d/%m/%Y'),
-				max_date_allowed=datetime.strptime('01/01/2022','%d/%m/%Y'),
-				initial_visible_month=datetime.strptime('01/01/2009','%d/%m/%Y'),
+				minDate=gmc_datasource.getMinDate(),
+				maxDate=gmc_datasource.getMaxDate(timefix=True),
 				clearable=True,
-				display_format='DD/MM/YYYY',
+				placeholder="Selecione o intervalo de datas",
+				style={'width':'220px'},
+				# value=[,]
+				inputFormat='DD/MM/YYYY',
 			)]
 		),
-		dbc.Button("Aplicar", id="sidebar-apply", n_clicks=0, class_name="sidebar-apply")
+		filter_item("Natureza", 
+			[dmc.Select(
+				placeholder="Selecione a natureza",
+				id="occurrence-type-select",
+				value=None,
+				data=gmc_datasource.getCrimesType(),
+				clearable=True,
+				style={'width': '220px'},
+        	)]
+		),
+		dbc.Button("Aplicar", id="sidebar-apply", n_clicks=0, class_name="sidebar-apply color-primary")
 	],
 	id="sidebar",
 	className="sidebar-hidden"
@@ -26,10 +42,18 @@ sidebar = html.Div(
     Output("sidebar", "className"),
 	Output("layout", "className"),
 	State("sidebar", "className"),
-    Input("open-sidebar", "n_clicks"),
-	# Input("sidebar-closebutton","n_clicks")
+    Input("open-sidebar", "n_clicks")
 )
 def toggle_offcanvas(className, n_clicks):#, close):
 	if n_clicks and className == "sidebar-hidden":
 		return "sidebar","content p-0"
 	return "sidebar-hidden","content-full p-0"
+
+@callback(
+	Output("date-range-filter","value"),
+	Output("date-range-filter","maxDate"),
+	Input("my-date-picker-single", "value"),
+)
+def date_changed(end_date):
+	gmc_datasource.filter_by_end_date(end_date)
+	return None, gmc_datasource.getMaxDate(timefix=True)

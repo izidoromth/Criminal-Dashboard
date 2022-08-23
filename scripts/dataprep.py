@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import geopandas as gpd
+import numpy as np
 
 df_gmc = pd.read_csv('./data/gmc/sigesguarda.csv', delimiter=';', encoding='ISO-8859-1')
 
@@ -23,6 +24,18 @@ df_gmc = df_gmc[~df_gmc['ATENDIMENTO_BAIRRO_NOME'].isnull()]
 df_gmc['ATENDIMENTO_ANO'] = df_gmc['ATENDIMENTO_ANO'].astype(int)
 df_gmc['ATENDIMENTO_BAIRRO_NOME'] = df_gmc['ATENDIMENTO_BAIRRO_NOME'].apply(prepare_district_names)
 df_gmc['ATENDIMENTO_BAIRRO_NOME'] = df_gmc['ATENDIMENTO_BAIRRO_NOME'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+
+df_gmc['OCORRENCIA_DATA_SEM_HORARIO'] = pd.to_datetime(df_gmc['OCORRENCIA_DATA'], format='%Y-%m-%d %H:%M:%S.%f').dt.date
+
+feriados_nacionais = pd.read_excel('./data/feriados_nacionais.xls')
+
+feriados_nacionais.drop(np.arange(936,945),inplace=True)
+feriados_nacionais['OCORRENCIA_DATA_SEM_HORARIO'] = pd.to_datetime(feriados_nacionais['Data'], format='%Y-%m-%d %H:%M:%S', errors='ignore').dt.date
+feriados_nacionais.drop(columns=['Data'],inplace=True)
+
+df_gmc = df_gmc.merge(feriados_nacionais, on='OCORRENCIA_DATA_SEM_HORARIO', how='left')
+df_gmc['FERIADO'] = df_gmc['Feriado'].apply(lambda x: 1 if not pd.isna(x) else 0)
+df_gmc.drop(columns=['Dia da Semana','Feriado'], inplace=True)
 
 df_gmc.to_csv('./data/gmc/sigesguarda_cleaned.csv', index=False)
 
@@ -103,6 +116,4 @@ def district_name_convert(nome):
 
 geojsondf['NOME'] = geojsondf['NOME'].apply(district_name_convert)
 
-geojsondf.to_file('./data/divisa_bairros_cleaned.geojson', driver="GeoJSON") 
-
-df_estelionato = pd.read_csv('../data/pcpr/estelionato/estelionato_2016_2020_bairros.csv')
+geojsondf.to_file('./data/divisa_bairros_cleaned.geojson', driver="GeoJSON")

@@ -1,6 +1,12 @@
 import dash_bootstrap_components as dbc
-from dash import dcc, html, callback, Input, Output, State
-from datetime import date
+import dash_mantine_components as dmc
+from dash import dcc, html, callback, Input, Output
+import datetime as dt
+from assets.styles import primary, secondary
+from datetime import datetime
+from datasources.gmc_datasource import GmcDatasource
+
+gmc_datasource = GmcDatasource.instance()
 
 SIDEBAR = {
 	'display': 'flex',
@@ -16,23 +22,25 @@ navbar = dbc.Navbar(
 		dbc.Button(
 			html.I(className="fa fa-sliders"), 
 			id="open-sidebar",
-			class_name="ms-0"),
+			class_name="ms-0",
+			style={'background-color':primary}),
 		dbc.NavItem(id="pcpr_navitem", children=dbc.NavLink("PCPR", href="/pcpr", class_name="text-white")),
 		dbc.NavItem(id="gmc_navitem", children=dbc.NavLink("GMC", href="/gmc", class_name="text-white")),
-		dcc.DatePickerSingle(
+		dmc.DatePicker(
 			id='my-date-picker-single',
-			display_format='DD, MMM YYYY',
-			min_date_allowed=date(1995, 8, 5),
-			max_date_allowed=date(2022, 12, 31),
-			initial_visible_month=date(2017, 8, 5),
-			date=date(2017, 8, 25),
-			className="date-picker",			
+			inputFormat='DD, MMM YYYY',
+			minDate=gmc_datasource.getMinDate(),
+			maxDate=gmc_datasource.getMaxDate(timefix=True),
+			value=gmc_datasource.getMaxDate(),
+			class_name="date-picker",
+			style={'background-color': 'transparent', 'color': 'white'},
+			clearable=False
 		)],
 		id="navbar-container",
 		style=SIDEBAR
 	),
 	class_name='row h-100 p-0',
-    color="primary",
+    color=primary,
     dark=True,
 )
 
@@ -43,9 +51,9 @@ navbar = dbc.Navbar(
 )
 def update_navbar_selected(href):
 	if 'pcpr' in href:
-		return {'background-color':'#3888ff'},{}
+		return {'background-color':secondary},{}
 	elif 'gmc' in href:
-		return {},{'background-color':'#3888ff'}
+		return {},{'background-color':secondary}
 	else:
 		return {},{}
 

@@ -1,3 +1,13 @@
+:root {
+  --primary: #25282e;
+  --secondary: #626c7a;
+  --tertiary: #e3e1e1;
+}
+
+.color-primary {
+  background-color: var(--primary);
+}
+
 .content {
   transition: margin-left .5s;
   margin-left: 18rem;
@@ -24,7 +34,7 @@
   overflow-x: hidden;
   transition: all 0.5s;
   padding: 0.5rem 1rem;
-  background-color: #deebfc;
+  background-color: var(--tertiary);
 }
 
 .sidebar-hidden {
@@ -38,7 +48,7 @@
   overflow-x: hidden;
   transition: all 0.5s;
   padding: 0rem 0rem;
-  background-color: #f8f9fa;
+  background-color: var(--tertiary);
 }
 
 .sidebar-apply {
@@ -61,7 +71,9 @@
 
 .date-picker {
   margin-left: 30%;
-  color: white
+  width: 110px;
+  background-color: transparent;
+  color: white;
 }
 
 .navbar-container {
@@ -74,24 +86,6 @@
 
 .inline {
   display: inline-block;
-}
-
-.DateInput, .DateInput_1 {
-  border-radius: 4px 0 0 4px !important;
-  background-color: transparent;
-}
-
-.DateInput_input, .DateInput_input_1 {
-  Height: 34px !important;
-  Width: 100% !important;
-  border-radius: inherit;  
-  background-color: transparent;
-  color: inherit;
-}
-
-.SingleDatePickerInput__withBorder {
-  border: 0px solid #ccc !important;  
-  background-color: transparent;
 }
 
 .filter_item {
