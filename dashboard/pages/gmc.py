@@ -19,6 +19,7 @@ temporal_tab = html.Div(children=[
         dcc.Location(id='loc'),
 		dcc.Graph(id="model_outliers"),
 		dcc.Graph(id="most_frequent_crimes"),
+		dcc.Graph(style={'height':'400px'})
 	],
 )
 
@@ -38,7 +39,8 @@ layout = html.Div(
 			value="temporal-tab"
         ),
         html.Div(id="card-content"),
-    ]
+    ],
+	style={'margin-top':'50px'}
 )
 
 @callback(

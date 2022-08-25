@@ -39,7 +39,7 @@ navbar = dbc.Navbar(
 		id="navbar-container",
 		style=SIDEBAR
 	),
-	class_name='row h-100 p-0',
+	class_name='row p-0 header',
     color=primary,
     dark=True,
 )
