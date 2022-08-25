@@ -19,7 +19,7 @@ temporal_tab = html.Div(children=[
         dcc.Location(id='loc'),
 		dcc.Graph(id="model_outliers"),
 		dcc.Graph(id="most_frequent_crimes"),
-		dcc.Graph(style={'height':'400px'})
+		# html.Div(id="test")
 	],
 )
 
@@ -90,7 +90,7 @@ def create_outlier_model_view(n_clicks, navbar_date, dates, type):
 	model_formula = ' + '.join(model_features)	
 	model_results = smf.ols(formula=f'OCORRENCIAS_ATENDIDAS ~ {model_formula} - 1', data=df_gmc_ols_model).fit()
 	
-	print(model_results.summary())
+	# print(model_results.summary())
 
 	df_results = pd.DataFrame([df_gmc_ols_model['OCORRENCIAS_ATENDIDAS'], model_results.predict(df_gmc_ols_model[model_features])]).transpose().reset_index()
 	df_results['Data'] = df_gmc_ols_model['OCORRENCIA_DATA_SEM_HORARIO']
@@ -143,11 +143,21 @@ def create_outlier_model_view(n_clicks, navbar_date, dates, type):
 @callback(
     Output("most_frequent_crimes", "figure"),
 	Input("sidebar-apply", "n_clicks"),
+	Input("model_outliers","relayoutData"),
 	State("date-range-filter","value"),
 )
-def create_frequent_crimes_view(n_clicks, dates):
-	initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None else gmc_datasource.getMinDate()
-	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None else gmc_datasource.getMaxDate()
+def create_frequent_crimes_view(n_clicks, relayoutData, dates):
+	initial_date, end_date = None, None
+
+	if relayoutData != None and 'xaxis.range' in relayoutData:
+		initial_date = datetime.strptime(relayoutData['xaxis.range'][0][0:10],'%Y-%m-%d').date()
+		end_date = datetime.strptime(relayoutData['xaxis.range'][1][0:10],'%Y-%m-%d').date()
+	elif relayoutData != None and 'xaxis.range[0]' in relayoutData and 'xaxis.range[1]' in relayoutData:
+		initial_date = datetime.strptime(relayoutData['xaxis.range[0]'][0:10],'%Y-%m-%d').date()
+		end_date = datetime.strptime(relayoutData['xaxis.range[1]'][0:10],'%Y-%m-%d').date()
+	else:
+		initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None else gmc_datasource.getMinDate()
+		end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None else gmc_datasource.getMaxDate()
 
 	dfg = gmc_datasource.df[
 			(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & 
@@ -166,6 +176,24 @@ def create_frequent_crimes_view(n_clicks, dates):
 			t=20,
 			pad=0
 		),
+		'legend': dict(font = dict(family = "Courier", size = 50, color = "white"))
 	})
 
 	return fig
+
+# @callback(
+# 	Output("test","children"),
+# 	Input("model_outliers","relayoutData"),
+# 	Input("model_outliers","hoverData"),
+# 	Input("model_outliers","clickData"),
+# 	Input("model_outliers","selectedData")
+# )
+# def test(relayoutData, hoverData, clickData, selectedData):
+# 	# sliderange = relayoutData['xaxis.range'] if relayoutData else None
+# 
+# 	print("\nrelayoutData\n\t", relayoutData)
+# 	print("\nhoverData\n\t", hoverData)
+# 	print("\nclickData\n\t", clickData)
+# 	print("\nselectedData\n\t", selectedData, end='\n----------------')
+# 
+# 	return ""
