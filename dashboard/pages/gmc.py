@@ -5,7 +5,11 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.graph_objects import Layout
+from plotly.subplots import make_subplots
 import pandas as pd
+import geopandas as gpd
+from pysal.explore import esda
+from pysal.lib import weights
 import statsmodels.formula.api as smf
 from datetime import datetime
 from assets.styles import *
@@ -17,13 +21,20 @@ dash.register_page(__name__, path='/gmc', title="Painel Criminal: GMC")
 
 temporal_tab = html.Div(children=[
         dcc.Location(id='loc'),
-		dcc.Graph(id="model_outliers"),
+		dcc.Graph(id="temporal_model"),
 		dcc.Graph(id="most_frequent_crimes"),
 		# html.Div(id="test")
 	],
 )
 
-spatial_tab = html.Div('Espacial')
+spatial_tab = html.Div(children=[
+		dcc.Graph(id="spatial_model_occurrences"),
+		dcc.Graph(id="spatial_model_lag"),
+		dcc.Graph(id="spatial_model_clusters"),
+		dcc.Graph(id="spatial_model_significants"),
+	],
+	className="temporal-tab"
+)
 
 spatiotemporal_tab = html.Div('Espaço-temporal')
 
@@ -56,13 +67,13 @@ def change_tab_content(active_tab):
 		return spatiotemporal_tab
 
 @callback(
-    Output("model_outliers", "figure"),
+    Output("temporal_model", "figure"),
 	Input("sidebar-apply", "n_clicks"),
 	Input("my-date-picker-single","value"),
 	[State("date-range-filter","value"),	
 	State("occurrence-type-select","value")]
 )
-def create_outlier_model_view(n_clicks, navbar_date, dates, type):
+def create_temporal_outlier_model_view(n_clicks, navbar_date, dates, type):
 	if ctx.triggered[0]['prop_id'] == "my-date-picker-single.value":
 		gmc_datasource.filter_by_end_date(navbar_date)
 
@@ -143,7 +154,7 @@ def create_outlier_model_view(n_clicks, navbar_date, dates, type):
 @callback(
     Output("most_frequent_crimes", "figure"),
 	Input("sidebar-apply", "n_clicks"),
-	Input("model_outliers","relayoutData"),
+	Input("temporal_model","relayoutData"),
 	State("date-range-filter","value"),
 )
 def create_frequent_crimes_view(n_clicks, relayoutData, dates):
@@ -181,12 +192,89 @@ def create_frequent_crimes_view(n_clicks, relayoutData, dates):
 
 	return fig
 
+@callback(
+    [Output("spatial_model_occurrences", "figure"),
+	Output("spatial_model_lag", "figure"),
+	Output("spatial_model_clusters", "figure"),
+	Output("spatial_model_significants", "figure")],
+	Input("sidebar-apply", "n_clicks"),
+	Input("my-date-picker-single","value"),
+	[State("date-range-filter","value"),	
+	State("occurrence-type-select","value")]
+)
+def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):	
+	if ctx.triggered[0]['prop_id'] == "my-date-picker-single.value":
+		gmc_datasource.filter_by_end_date(navbar_date)
+
+	initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else gmc_datasource.getMinDate()
+	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else gmc_datasource.getMaxDate()
+
+	gmc_ref = gmc_datasource.df[(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & (gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] <= end_date)].groupby(['ATENDIMENTO_BAIRRO_NOME']).size().reset_index(name='OCORRENCIAS_ATENDIDAS').set_index('ATENDIMENTO_BAIRRO_NOME')
+	gmc_ref = gmc_ref.join(gmc_datasource.dem)
+	gmc_ref.dropna(inplace=True)
+	gmc_ref['Ocorrências p.'] = gmc_ref['OCORRENCIAS_ATENDIDAS'] / gmc_ref['População Total']
+	gmc_ref.drop(columns=['OCORRENCIAS_ATENDIDAS','População Total'], inplace=True)
+	
+	db = gpd.GeoDataFrame(gmc_datasource.bairros.join(gmc_ref[["Ocorrências p."]]), crs=gmc_datasource.bairros.crs).to_crs(epsg=3857)[["Ocorrências p.", "geometry"]].dropna()
+
+	w = weights.KNN.from_dataframe(db, k=6)
+	w.transform = "R"
+
+	db["Ocorrências p. lag"] = weights.spatial_lag.lag_spatial(w, db["Ocorrências p."])
+
+	lisa = esda.moran.Moran_Local(db["Ocorrências p."], w)
+
+	spots_labels = {
+		0: "Non-Significant",
+		1: "HH",
+		2: "LH",
+		3: "LL",
+		4: "HL",
+	}
+
+	db['labels'] = pd.Series(lisa.q, index=db.index).map(spots_labels)
+	db['labels_sig'] = pd.Series(1*(lisa.p_sim < 0.05)*lisa.q, index=db.index).map(spots_labels)
+	db.reset_index(inplace=True)
+
+	fig1 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p.",
+			color_continuous_scale=continuous_grey_scale,
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig2 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p. lag",
+			color_continuous_scale=continuous_grey_scale,
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig3 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="labels",
+			color_discrete_map={'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig4 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="labels_sig",
+			color_discrete_map={'Non-Significant':rgba(tertiary, .3), 'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+	
+	fig1.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig2.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig3.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig4.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+
+	return fig1, fig2, fig3, fig4
+
+
+
 # @callback(
 # 	Output("test","children"),
-# 	Input("model_outliers","relayoutData"),
-# 	Input("model_outliers","hoverData"),
-# 	Input("model_outliers","clickData"),
-# 	Input("model_outliers","selectedData")
+# 	Input("temporal_model","relayoutData"),
+# 	Input("temporal_model","hoverData"),
+# 	Input("temporal_model","clickData"),
+# 	Input("temporal_model","selectedData")
 # )
 # def test(relayoutData, hoverData, clickData, selectedData):
 # 	# sliderange = relayoutData['xaxis.range'] if relayoutData else None

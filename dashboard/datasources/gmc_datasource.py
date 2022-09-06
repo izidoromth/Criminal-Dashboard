@@ -3,16 +3,26 @@ from time import time
 import pandas as pd
 from datetime import datetime
 import datetime as dt
+import geopandas as gpd
+import json
 
 aux_df = pd.read_csv('./data/gmc/sigesguarda_cleaned.csv', dtype='unicode')
 aux_df['OCORRENCIA_DATA_SEM_HORARIO'] = pd.to_datetime(aux_df['OCORRENCIA_DATA'], format='%Y-%m-%d %H:%M:%S.%f').dt.date
-
+        
 class GmcDatasource:
 
     _instance = None
 
     def __init__(self):
+        aux_dem = pd.read_csv('./data/renda.csv')
+        aux_dem = aux_dem[['Bairros','População Total']].set_index('Bairros')
+
+        f = open('./data/divisa_bairros_cleaned.geojson', encoding='utf-8')
+
         self.df = aux_df
+        self.dem = aux_dem
+        self.bairros = gpd.read_file('./data/divisa_bairros_cleaned.geojson').set_index('NOME')
+        self.bairros_geojson = json.load(f)
 
     @classmethod
     def instance(cls):

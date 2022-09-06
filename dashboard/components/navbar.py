@@ -5,10 +5,11 @@ import datetime as dt
 from assets.styles import primary, secondary
 from datetime import datetime
 from datasources.gmc_datasource import GmcDatasource
+from assets.styles import navbar_datepicker
 
 gmc_datasource = GmcDatasource.instance()
 
-SIDEBAR = {
+NAVBAR = {
 	'display': 'flex',
 	'flex-direction': 'row',
 	'justify-content':'start',
@@ -32,12 +33,10 @@ navbar = dbc.Navbar(
 			minDate=gmc_datasource.getMinDate(),
 			maxDate=gmc_datasource.getMaxDate(timefix=True),
 			value=gmc_datasource.getMaxDate(),
-			class_name="date-picker",
-			style={'background-color': 'transparent', 'color': 'white'},
+			style=navbar_datepicker,
 			clearable=False
 		)],
-		id="navbar-container",
-		style=SIDEBAR
+		style=NAVBAR
 	),
 	class_name='row p-0 header',
     color=primary,

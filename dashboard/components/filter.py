@@ -4,6 +4,7 @@ from dash import callback, Input, Output, State, html, dcc
 import datetime as dt
 from components.filter_item import filter_item
 from datasources.gmc_datasource import GmcDatasource
+from assets.styles import navbar_datepicker
 
 gmc_datasource = GmcDatasource.instance()
 
@@ -41,13 +42,16 @@ sidebar = html.Div(
 @callback(
     Output("sidebar", "className"),
 	Output("layout", "className"),
+	Output("my-date-picker-single", "style"),
 	State("sidebar", "className"),
     Input("open-sidebar", "n_clicks")
 )
 def toggle_offcanvas(className, n_clicks):#, close):
 	if n_clicks and className == "sidebar-hidden":
-		return "sidebar","content p-0"
-	return "sidebar-hidden","content-full p-0"
+		navbar_datepicker['left'] = '40%'
+		return "sidebar","content p-0",navbar_datepicker
+	navbar_datepicker['left'] = '50%'
+	return "sidebar-hidden","content-full p-0",navbar_datepicker
 
 @callback(
 	Output("date-range-filter","value"),

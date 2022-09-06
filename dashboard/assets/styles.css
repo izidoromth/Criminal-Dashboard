@@ -76,22 +76,6 @@
   flex-direction: row;
   justify-content: center;
 }
-
-.date-picker {
-  margin-left: 30%;
-  width: 110px;
-  background-color: transparent;
-  color: white;
-}
-
-.navbar-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  margin-left: 0px;
-  flex-wrap: nowrap
-}
-
 .inline {
   display: inline-block;
 }
@@ -109,4 +93,11 @@
   border-left: 1px solid lightgrey !important;
   border-right: 1px solid lightgrey !important;
   border-top: 0px !important;
+}
+
+.temporal-tab {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
 }
