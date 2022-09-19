@@ -1,11 +1,11 @@
 primary = '#25282e'
 secondary = '#626c7a'
 tertiary = '#e3e1e1'
-hotspot = 'rgba(0, 0, 0, 0.8)'
-coldspot = 'rgba(180, 180, 180, 0.8)'
-high_low = 'rgba(60, 60, 60, 0.8)'
-low_high = 'rgba(120, 120, 120, 0.8)'
-continuous_grey_scale = ['rgb(217,217,217)','rgb(189,189,189)','rgb(150,150,150)','rgb(115,115,115)','rgb(82,82,82)','rgb(37,37,37)','rgb(0,0,0)']
+hotspot = 'rgba(103, 0, 31, 1)'
+coldspot = 'rgba(6, 50, 100, 1)'
+high_low = 'rgba(184, 0, 55, 1)'
+low_high = 'rgba(12, 103, 207, 1)'
+continuous_rdbu_scale = ['rgba(6, 50, 100, 1)', 'rgba(57, 134, 188, 1)', 'rgba(156, 202, 225, 1)', 'rgba(240, 156, 123, 1)', 'rgba(182, 32, 47, 1)', 'rgba(103, 0, 31, 1)']
 
 def rgba(hex, alpha):
     r = int(hex[1:3], 16)  

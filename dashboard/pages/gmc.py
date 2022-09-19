@@ -237,13 +237,13 @@ def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):
 	db.reset_index(inplace=True)
 
 	fig1 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p.",
-			color_continuous_scale=continuous_grey_scale,
+			color_continuous_scale=continuous_rdbu_scale,
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
 			mapbox_style="carto-positron", zoom=9)
 
 	fig2 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p. lag",
-			color_continuous_scale=continuous_grey_scale,
+			color_continuous_scale=continuous_rdbu_scale,
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
 			mapbox_style="carto-positron", zoom=9)

@@ -5,3 +5,4 @@ dashboard/components/__pycache__
 dashboard/datasources/__pycache__
 dashboard/assets/__pycache__/
 venv/
+data/gmc/sigesguarda_cleaned_georref.csv
