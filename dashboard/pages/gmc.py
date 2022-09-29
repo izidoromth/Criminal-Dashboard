@@ -47,7 +47,8 @@ layout = html.Div(
 				dcc.Tab(label="Análise Espaço-Temporal", value="spatiotemporal-tab", selected_className="custom-tab--selected"),
 			],
 			id="card-tabs",
-			value="temporal-tab"
+			value="temporal-tab",
+			persistence=True
         ),
         html.Div(id="card-content"),
     ],

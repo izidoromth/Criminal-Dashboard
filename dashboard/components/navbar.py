@@ -36,7 +36,7 @@ navbar = dbc.Navbar(
 			style=navbar_datepicker,
 			clearable=False
 		)],
-		style=NAVBAR
+		style=NAVBAR,
 	),
 	class_name='row p-0 header',
     color=primary,
