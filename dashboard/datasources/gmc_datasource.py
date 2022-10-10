@@ -20,6 +20,7 @@ class GmcDatasource:
         f = open('./data/divisa_bairros_cleaned.geojson', encoding='utf-8')
 
         self.df = aux_df
+        self.ocorrencias_bairro_mes = pd.read_csv('./data/gmc/ocorrencias_bairro_mes.csv')
         self.dem = aux_dem
         self.bairros = gpd.read_file('./data/divisa_bairros_cleaned.geojson').set_index('NOME')
         self.bairros_geojson = json.load(f)
@@ -32,7 +33,7 @@ class GmcDatasource:
 
     def filter_by_end_date(self, end_date):
         if end_date == None:
-            end_date = self.aux_df['OCORRENCIA_DATA_SEM_HORARIO'].max()
+            end_date = aux_df['OCORRENCIA_DATA_SEM_HORARIO'].max()
         else:
             end_date = datetime.strptime(end_date,'%Y-%m-%d').date()
             
@@ -48,5 +49,4 @@ class GmcDatasource:
             return self.df['OCORRENCIA_DATA_SEM_HORARIO'].max()
 
     def getCrimesType(self):
-        return self.df['NATUREZA1_DESCRICAO'].unique().squeeze()
-
+        return self.df['NATUREZA1_DESCRICAO'].unique().tolist()

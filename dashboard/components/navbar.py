@@ -13,7 +13,8 @@ NAVBAR = {
 	'display': 'flex',
 	'flex-direction': 'row',
 	'justify-content':'start',
-	'margin-left': '0px',
+	'margin': '0px',
+	'padding': '0px',
 	'flex-wrap': 'nowrap',
 }
 
@@ -39,6 +40,7 @@ navbar = dbc.Navbar(
 		style=NAVBAR,
 	),
 	class_name='row p-0 header',
+	style={'height':'40px', 'padding':'0px'},
     color=primary,
     dark=True,
 )

@@ -71,11 +71,10 @@
   align-self: center;
 }
 
-.histogram_div {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+.horizontal-div {
+  display: table-row;
 }
+
 .inline {
   display: inline-block;
 }

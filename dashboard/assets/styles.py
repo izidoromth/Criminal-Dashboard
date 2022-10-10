@@ -7,6 +7,13 @@ high_low = 'rgba(184, 0, 55, 1)'
 low_high = 'rgba(12, 103, 207, 1)'
 continuous_rdbu_scale = ['rgba(6, 50, 100, 1)', 'rgba(57, 134, 188, 1)', 'rgba(156, 202, 225, 1)', 'rgba(240, 156, 123, 1)', 'rgba(182, 32, 47, 1)', 'rgba(103, 0, 31, 1)']
 
+spatio_temporal_class = {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'height': '650px',
+    'justify-content': 'center',
+}
+
 def rgba(hex, alpha):
     r = int(hex[1:3], 16)  
     g = int(hex[3:5], 16)  

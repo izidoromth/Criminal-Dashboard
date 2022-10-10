@@ -14,10 +14,12 @@ def prepare_district_names(district):
     return 'JARDIM OSASCO'
   elif('AFONSO PENA ' in district):
     return 'AFONSO PENA'
-  elif('CENTRO' in district):
+  elif('CENTRO' in district and 'CÍVICO' not in district):
     return 'CENTRO'
   elif('GUATUPE' in district):
     return 'GUATUPE'
+  elif('fanny' in district):
+    return 'FANNY'
   else:
     return district
 

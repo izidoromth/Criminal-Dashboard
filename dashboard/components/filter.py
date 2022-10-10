@@ -3,13 +3,17 @@ import dash_mantine_components as dmc
 from dash import callback, Input, Output, State, html, dcc
 import datetime as dt
 from components.filter_item import filter_item
+from datasources.pcpr_datasource import PcprDatasource
 from datasources.gmc_datasource import GmcDatasource
+from datasources.pcpr_datasource import PcprDatasource
 from assets.styles import navbar_datepicker
 
 gmc_datasource = GmcDatasource.instance()
+pcpr_datasource = PcprDatasource.instance()
 
 sidebar = html.Div(
 	[
+		dcc.Location(id='filter-loc'),
 		html.H4("Painel Criminal"),
 		filter_item("Intervalo", 
 			[dmc.DateRangePicker(
@@ -28,8 +32,8 @@ sidebar = html.Div(
 				placeholder="Selecione a natureza",
 				id="occurrence-type-select",
 				value=None,
-				data=gmc_datasource.getCrimesType(),
 				clearable=True,
+				data=pcpr_datasource.getCrimesType(),
 				style={'width': '220px'},
         	)]
 		),
@@ -38,6 +42,18 @@ sidebar = html.Div(
 	id="sidebar",
 	className="sidebar-hidden"
 )
+
+@callback(
+	Output("occurrence-type-select","data"),
+	Output("date-range-filter","minDate"),
+	Output("date-range-filter","maxDate"),
+	Output("occurrence-type-select","value"),
+	Input("filter-loc","href")
+)
+def change_filter_datasource(href):
+	if href.split('/')[-1] == 'gmc':
+		return gmc_datasource.getCrimesType(), gmc_datasource.getMinDate(), gmc_datasource.getMaxDate(), None
+	return pcpr_datasource.getCrimesType(), pcpr_datasource.getMinDate(), pcpr_datasource.getMaxDate(), None
 
 @callback(
     Output("sidebar", "className"),
@@ -52,12 +68,3 @@ def toggle_offcanvas(className, n_clicks):#, close):
 		return "sidebar","content p-0",navbar_datepicker
 	navbar_datepicker['left'] = '50%'
 	return "sidebar-hidden","content-full p-0",navbar_datepicker
-
-@callback(
-	Output("date-range-filter","value"),
-	Output("date-range-filter","maxDate"),
-	Input("my-date-picker-single", "value"),
-)
-def date_changed(end_date):
-	gmc_datasource.filter_by_end_date(end_date)
-	return None, gmc_datasource.getMaxDate(timefix=True)
