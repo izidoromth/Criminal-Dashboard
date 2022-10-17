@@ -15,10 +15,12 @@ from statsmodels.regression.linear_model import OLS
 from datetime import datetime
 from assets.styles import *
 from datasources.gmc_datasource import GmcDatasource
+from datasources.common_datasource import CommonDatasource
 import time
 start_time = time.time()
 
 gmc_datasource = GmcDatasource.instance()
+common_datasource = CommonDatasource.instance()
 
 dash.register_page(__name__, path='/gmc', title="Painel Criminal: GMC")
 
@@ -223,12 +225,12 @@ def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):
 	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else gmc_datasource.getMaxDate()
 
 	gmc_ref = gmc_datasource.df[(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & (gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] <= end_date)].groupby(['ATENDIMENTO_BAIRRO_NOME']).size().reset_index(name='OCORRENCIAS_ATENDIDAS').set_index('ATENDIMENTO_BAIRRO_NOME')
-	gmc_ref = gmc_ref.join(gmc_datasource.dem)
+	gmc_ref = gmc_ref.join(common_datasource.dem)
 	gmc_ref.dropna(inplace=True)
 	gmc_ref['Ocorrências p.'] = gmc_ref['OCORRENCIAS_ATENDIDAS'] / gmc_ref['População Total']
 	gmc_ref.drop(columns=['OCORRENCIAS_ATENDIDAS','População Total'], inplace=True)
 	
-	db = gpd.GeoDataFrame(gmc_datasource.bairros.join(gmc_ref[["Ocorrências p."]]), crs=gmc_datasource.bairros.crs).to_crs(epsg=3857)[["Ocorrências p.", "geometry"]].dropna()
+	db = gpd.GeoDataFrame(common_datasource.bairros.join(gmc_ref[["Ocorrências p."]]), crs=common_datasource.bairros.crs).to_crs(epsg=3857)[["Ocorrências p.", "geometry"]].dropna()
 
 	w = weights.KNN.from_dataframe(db, k=6)
 	w.transform = "R"
@@ -249,25 +251,25 @@ def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):
 	db['labels_sig'] = pd.Series(1*(lisa.p_sim < 0.05)*lisa.q, index=db.index).map(spots_labels)
 	db.reset_index(inplace=True)
 
-	fig1 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p.",
+	fig1 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="Ocorrências p.",
 			color_continuous_scale=continuous_rdbu_scale,
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
 			mapbox_style="carto-positron", zoom=9)
 
-	fig2 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="Ocorrências p. lag",
+	fig2 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="Ocorrências p. lag",
 			color_continuous_scale=continuous_rdbu_scale,
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
 			mapbox_style="carto-positron", zoom=9)
 
-	fig3 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="labels",
+	fig3 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="labels",
 			color_discrete_map={'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
 			mapbox_style="carto-positron", zoom=9)
 
-	fig4 = px.choropleth_mapbox(db, geojson=gmc_datasource.bairros_geojson, color="labels_sig",
+	fig4 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="labels_sig",
 			color_discrete_map={'Non-Significant':rgba(tertiary, .3), 'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
 			locations="NOME", featureidkey='properties.NOME',
 			center={"lat": -25.459717, "lon": -49.278820},
@@ -323,7 +325,7 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 
 	fig = px.choropleth_mapbox(
 		outliers, 
-		geojson=gmc_datasource.bairros_geojson, color="ATENDIMENTO_BAIRRO_NOME",
+		geojson=common_datasource.bairros_geojson, color="ATENDIMENTO_BAIRRO_NOME",
 		hover_data=["OCORRENCIA_ANO","OCORRENCIA_MES","OCORRENCIAS_ATENDIDAS","OCORRENCIAS_PREVISTAS"],
 		locations="ATENDIMENTO_BAIRRO_NOME", featureidkey='properties.NOME',
 		center={"lat": -25.459717, "lon": -49.278820},

@@ -17,13 +17,8 @@ class GmcDatasource:
         aux_dem = pd.read_csv('./data/renda.csv')
         aux_dem = aux_dem[['Bairros','População Total']].set_index('Bairros')
 
-        f = open('./data/divisa_bairros_cleaned.geojson', encoding='utf-8')
-
         self.df = aux_df
         self.ocorrencias_bairro_mes = pd.read_csv('./data/gmc/ocorrencias_bairro_mes.csv')
-        self.dem = aux_dem
-        self.bairros = gpd.read_file('./data/divisa_bairros_cleaned.geojson').set_index('NOME')
-        self.bairros_geojson = json.load(f)
 
     @classmethod
     def instance(cls):

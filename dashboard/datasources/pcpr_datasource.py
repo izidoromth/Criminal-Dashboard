@@ -4,9 +4,8 @@ import pandas as pd
 from datetime import datetime
 import datetime as dt
 import geopandas as gpd
-import json
 
-aux_df = pd.read_csv('./data/pcpr/crimes2016-2020.csv')
+aux_df = pd.read_csv('./data/pcpr/crimes2016-2020_bairro.csv')
 aux_df['data_fato'] = pd.to_datetime(aux_df['data_fato'], format='%Y-%m-%d').dt.date
 
 class PcprDatasource:
@@ -14,18 +13,10 @@ class PcprDatasource:
     _instance = None
 
     def __init__(self):
-        # aux_dem = pd.read_csv('./data/renda.csv')
-        # aux_dem = aux_dem[['Bairros','População Total']].set_index('Bairros')
-
-        # f = open('./data/divisa_bairros_cleaned.geojson', encoding='utf-8')
-
         self.df = aux_df
         self.df['PANDEMIA'] = self.df['data_fato'].apply(lambda x: 1*(x >= datetime.strptime('11/04/2020','%d/%m/%Y').date()))
 
         # self.ocorrencias_bairro_mes = pd.read_csv('./data/gmc/ocorrencias_bairro_mes.csv')
-        # self.dem = aux_dem
-        # self.bairros = gpd.read_file('./data/divisa_bairros_cleaned.geojson').set_index('NOME')
-        # self.bairros_geojson = json.load(f)
 
     @classmethod
     def instance(cls):

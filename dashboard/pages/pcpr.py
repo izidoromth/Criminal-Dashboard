@@ -2,6 +2,7 @@ import dash
 from dash import html, dcc, Output, Input, State, callback, ctx
 import dash_bootstrap_components as dbc
 from datasources.pcpr_datasource import PcprDatasource
+from datasources.common_datasource import CommonDatasource
 from assets.styles import *
 import numpy as np
 from statsmodels.regression.linear_model import OLS
@@ -9,9 +10,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.graph_objects import Layout
 import pandas as pd
+import geopandas as gpd
+from pysal.explore import esda
+from pysal.lib import weights
 from datetime import datetime
 
 pcpr_datasource = PcprDatasource.instance()
+common_datasource = CommonDatasource.instance()
 
 dash.register_page(__name__, path='/pcpr', title="Painel Criminal: PCPR")
 
@@ -26,11 +31,11 @@ temporal_tab = html.Div(children=[
 	],
 )
 
-spatial_tab = html.Div(children=["Espacial"
-		# dcc.Graph(id="spatial_model_occurrences"),
-		# dcc.Graph(id="spatial_model_lag"),
-		# dcc.Graph(id="spatial_model_clusters"),
-		# dcc.Graph(id="spatial_model_significants"),
+spatial_tab = html.Div(children=[
+		dcc.Graph(id="spatial_model_occurrences_pcpr"),
+		dcc.Graph(id="spatial_model_lag_pcpr"),
+		dcc.Graph(id="spatial_model_clusters_pcpr"),
+		dcc.Graph(id="spatial_model_significants_pcpr"),
 	],
 	className="temporal-tab"
 )
@@ -187,3 +192,78 @@ def create_frequent_crimes_view(n_clicks, relayoutData, dates):
 	})
 
 	return fig
+
+@callback(
+    [Output("spatial_model_occurrences_pcpr", "figure"),
+	Output("spatial_model_lag_pcpr", "figure"),
+	Output("spatial_model_clusters_pcpr", "figure"),
+	Output("spatial_model_significants_pcpr", "figure")],
+	Input("sidebar-apply", "n_clicks"),
+	Input("my-date-picker-single","value"),
+	[State("date-range-filter","value"),	
+	State("occurrence-type-select","value")]
+)
+def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):	
+	if ctx.triggered[0]['prop_id'] == "my-date-picker-single.value":
+		pcpr_datasource.filter_by_end_date(navbar_date)
+
+	initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else pcpr_datasource.getMinDate()
+	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else pcpr_datasource.getMaxDate()
+
+	gmc_ref = pcpr_datasource.df[(pcpr_datasource.df['data_fato'] >= initial_date) & (pcpr_datasource.df['data_fato'] <= end_date)].groupby(['descBairro']).sum().reset_index().set_index('descBairro')
+	gmc_ref = gmc_ref.join(common_datasource.dem)
+	gmc_ref.dropna(inplace=True)
+	gmc_ref['Ocorrências p.'] = gmc_ref['qtde_boletins'] / gmc_ref['População Total']
+	gmc_ref.drop(columns=['qtde_boletins','População Total'], inplace=True)
+	
+	db = gpd.GeoDataFrame(common_datasource.bairros.join(gmc_ref[["Ocorrências p."]]), crs=common_datasource.bairros.crs).to_crs(epsg=3857)[["Ocorrências p.", "geometry"]].dropna()
+
+	w = weights.KNN.from_dataframe(db, k=6)
+	w.transform = "R"
+
+	db["Ocorrências p. lag"] = weights.spatial_lag.lag_spatial(w, db["Ocorrências p."])
+
+	lisa = esda.moran.Moran_Local(db["Ocorrências p."], w)
+
+	spots_labels = {
+		0: "Non-Significant",
+		1: "HH",
+		2: "LH",
+		3: "LL",
+		4: "HL",
+	}
+
+	db['labels'] = pd.Series(lisa.q, index=db.index).map(spots_labels)
+	db['labels_sig'] = pd.Series(1*(lisa.p_sim < 0.05)*lisa.q, index=db.index).map(spots_labels)
+	db.reset_index(inplace=True)
+
+	fig1 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="Ocorrências p.",
+			color_continuous_scale=continuous_rdbu_scale,
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig2 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="Ocorrências p. lag",
+			color_continuous_scale=continuous_rdbu_scale,
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig3 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="labels",
+			color_discrete_map={'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+
+	fig4 = px.choropleth_mapbox(db, geojson=common_datasource.bairros_geojson, color="labels_sig",
+			color_discrete_map={'Non-Significant':rgba(tertiary, .3), 'HH':hotspot, 'LL':coldspot, 'HL':high_low, 'LH':low_high},
+			locations="NOME", featureidkey='properties.NOME',
+			center={"lat": -25.459717, "lon": -49.278820},
+			mapbox_style="carto-positron", zoom=9)
+	
+	fig1.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig2.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig3.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+	fig4.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
+
+	return fig1, fig2, fig3, fig4
