@@ -10,7 +10,7 @@ continuous_rdbu_scale = ['rgba(6, 50, 100, 1)', 'rgba(57, 134, 188, 1)', 'rgba(1
 spatio_temporal_class = {
     'display': 'flex',
     'flex-direction': 'row',
-    'height': '650px',
+    'height': '600px',
     'justify-content': 'center',
 }
 

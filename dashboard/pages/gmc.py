@@ -16,6 +16,7 @@ from datetime import datetime
 from assets.styles import *
 from datasources.gmc_datasource import GmcDatasource
 from datasources.common_datasource import CommonDatasource
+from assets.utils import to_month_year_str
 import time
 start_time = time.time()
 
@@ -28,8 +29,9 @@ temporal_tab = html.Div(children=[
         dcc.Location(id='loc'),
 		dcc.Graph(id="temporal_model"),
 		html.Div([
-			dcc.Graph(id="most_frequent_crimes"),
-			html.Div(id="variance_label", style={'font-size':'25px', 'margin': '10px 30px'})],
+				dcc.Graph(id="most_frequent_crimes"),
+				html.Div(id="variance_label", style={'font-size':'25px', 'margin': '10px 30px'})
+			],
 			style={'display':'flex', 'flex-direction':'row', 'justify-content':'space-between'}
 		)		
 	],
@@ -46,7 +48,10 @@ spatial_tab = html.Div(children=[
 
 spatiotemporal_tab = html.Div(children=[
 	dcc.Graph(id="spatiotemporal_map"),
-	dcc.Dropdown(id='spatiotemporal_select', placeholder="Selecione o mês da anomalia",style={'width':'250px'})],
+	html.Div([
+		dcc.Dropdown(id='spatiotemporal_select', placeholder="Selecione o mês da anomalia",style={'width':'250px'}),
+		html.Div(id="spatiotemporal_variance", style={'font-size':'25px', 'margin': '10px 30px'})],
+		style={'display':'flex', 'flex-direction':'column', 'justify-content':'space-between'})],
 	style=spatio_temporal_class
 )
 
@@ -282,13 +287,10 @@ def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):
 
 	return fig1, fig2, fig3, fig4
 
-def to_month_year_str(obj):
-	month = '{:02}'.format(obj[1])
-	return f'{month}/{obj[0]}'
-
 @callback(
 	Output("spatiotemporal_map","figure"),
-	Output("spatiotemporal_select","options"),
+	Output("spatiotemporal_select","options"),	
+	Output("spatiotemporal_variance","children"),
 	Input("sidebar-apply", "n_clicks"),
 	Input("spatiotemporal_select","value"),
 	Input("my-date-picker-single","value")
@@ -330,7 +332,7 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 		locations="ATENDIMENTO_BAIRRO_NOME", featureidkey='properties.NOME',
 		center={"lat": -25.459717, "lon": -49.278820},
 		mapbox_style="carto-positron", zoom=9)
-	fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=800)
+	fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=800, height=650)
 
 	marks = []
 	for idx, row in outliers_df[outliers_df['OUTLIER'] == 1].iterrows():
@@ -341,22 +343,4 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 
 	marks = [to_month_year_str(x) for x in marks]
 
-	return fig, marks
-
-
-# @callback(
-# 	Output("test","children"),
-# 	Input("temporal_model","relayoutData"),
-# 	Input("temporal_model","hoverData"),
-# 	Input("temporal_model","clickData"),
-# 	Input("temporal_model","selectedData")
-# )
-# def test(relayoutData, hoverData, clickData, selectedData):
-# 	# sliderange = relayoutData['xaxis.range'] if relayoutData else None
-# 
-# 	print("\nrelayoutData\n\t", relayoutData)
-# 	print("\nhoverData\n\t", hoverData)
-# 	print("\nclickData\n\t", clickData)
-# 	print("\nselectedData\n\t", selectedData, end='\n----------------')
-# 
-# 	return ""
+	return fig, marks, f'Variância total explicada pelo modelo: {str(round(stm.rsquared,2)).split(".")[1]}%'

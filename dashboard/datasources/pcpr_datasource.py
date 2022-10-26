@@ -16,7 +16,7 @@ class PcprDatasource:
         self.df = aux_df
         self.df['PANDEMIA'] = self.df['data_fato'].apply(lambda x: 1*(x >= datetime.strptime('11/04/2020','%d/%m/%Y').date()))
 
-        # self.ocorrencias_bairro_mes = pd.read_csv('./data/gmc/ocorrencias_bairro_mes.csv')
+        self.ocorrencias_bairro_mes = pd.read_csv('./data/pcpr/ocorrencias_bairro_mes.csv')
 
     @classmethod
     def instance(cls):

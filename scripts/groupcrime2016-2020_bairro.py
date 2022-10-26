@@ -57,6 +57,27 @@ df_dome_viol = df_dome_viol.assign(tipo='Violência Doméstica')
 
 df_all_crimes = pd.concat([df_fraud, df_robbery, df_drug, df_dome_viol], ignore_index=True)
 
+df_bairros = pd.DataFrame(df_all_crimes['descBairro'].value_counts())
+df_bairros = df_bairros[df_bairros['descBairro'] > 30]
+
+bairros = df_bairros.index.values.tolist()
+bairros.remove('NAO DEFINIDO')
+bairros.remove('NAO LOCALIZADO')
+bairros.remove('NAO INFORMADO')
+bairros.remove('PREJUDICADO')
+
+df_all_crimes = df_all_crimes[df_all_crimes['descBairro'].isin(bairros)]
+
+def prepare_district_names(district):
+  if('CIC' in district or 'CIDADE INDUSTRIAL' in district):
+    return 'CIDADE INDUSTRIAL DE CURITIBA'
+  elif('ALTO DA RUA XV ' in district):
+    return 'ALTO DA XV'
+  else:
+    return district
+
+df_all_crimes['descBairro'] = df_all_crimes['descBairro'].apply(prepare_district_names)
+
 df_all_crimes.sort_values(by='data_fato', inplace=True)
 
 df_all_crimes.drop(columns=['horaFato'],inplace=True)

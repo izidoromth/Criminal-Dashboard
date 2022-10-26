@@ -14,6 +14,8 @@ import geopandas as gpd
 from pysal.explore import esda
 from pysal.lib import weights
 from datetime import datetime
+from assets.utils import to_month_year_str
+import statsmodels.formula.api as smf
 
 pcpr_datasource = PcprDatasource.instance()
 common_datasource = CommonDatasource.instance()
@@ -40,10 +42,12 @@ spatial_tab = html.Div(children=[
 	className="temporal-tab"
 )
 
-spatiotemporal_tab = html.Div(children=["Espaço-temporal"
-	# dcc.Graph(id="spatiotemporal_map"),
-	# dcc.Dropdown(id='spatiotemporal_select', placeholder="Selecione o mês da anomalia",style={'width':'250px'})
-	],
+spatiotemporal_tab = html.Div(children=[
+	dcc.Graph(id="spatiotemporal_map_pcpr"),
+	html.Div([
+		dcc.Dropdown(id='spatiotemporal_select_pcpr', placeholder="Selecione o mês da anomalia",style={'width':'250px'}),
+		html.Div(id="spatiotemporal_variance_pcpr", style={'font-size':'25px', 'margin': '10px 30px'})],
+		style={'display':'flex', 'flex-direction':'column', 'justify-content':'space-between'})],
 	style=spatio_temporal_class
 )
 
@@ -267,3 +271,63 @@ def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):
 	fig4.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=650)
 
 	return fig1, fig2, fig3, fig4
+
+@callback(
+	Output("spatiotemporal_map_pcpr","figure"),
+	Output("spatiotemporal_select_pcpr","options"),	
+	Output("spatiotemporal_variance_pcpr","children"),
+	Input("sidebar-apply", "n_clicks"),
+	Input("spatiotemporal_select_pcpr","value"),
+	Input("my-date-picker-single","value")
+)
+def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
+	f = ('qtde_boletins ~ ' +
+		'ano ' +
+		'+ mes ' +
+		'+ descBairro ' +
+		'+ lag1' +
+		'+ lag2' +
+		'+ lag3' +
+		'+ lag4' +
+		'- 1')
+
+	training_data = (pcpr_datasource.ocorrencias_bairro_mes[
+						(pcpr_datasource.ocorrencias_bairro_mes['mes'] <= int(navbar_date.split('-')[1])) &
+						(pcpr_datasource.ocorrencias_bairro_mes['ano'] <= int(navbar_date.split('-')[0]))])
+
+	stm = smf.ols(f, data=training_data).fit()
+
+	print(stm.summary())
+
+	outliers_df = pd.DataFrame(np.concatenate((training_data.drop(columns=['lag1','lag2','lag3','lag4']).values, stm.predict().reshape((-1,1))), axis=1),
+								columns=['OCORRENCIA_ANO','OCORRENCIA_MES','ATENDIMENTO_BAIRRO_NOME','OCORRENCIAS_ATENDIDAS','OCORRENCIAS_PREVISTAS'])
+
+	outliers_df['OCORRENCIAS_PREVISTAS'] = outliers_df['OCORRENCIAS_PREVISTAS'].astype(int)
+	outliers_df['ERRO'] = outliers_df['OCORRENCIAS_PREVISTAS'] - outliers_df['OCORRENCIAS_ATENDIDAS']
+	outliers_df['Z-SCORE'] = (outliers_df['ERRO'] - outliers_df['ERRO'].mean())/outliers_df['ERRO'].std()
+	outliers_df['OUTLIER'] = outliers_df['Z-SCORE'].apply(lambda x: 1*(abs(x) >= 2.575))
+
+	outliers = (
+		outliers_df[outliers_df['OUTLIER'] == 1]
+		if outlier_date == None
+		else outliers_df[(outliers_df['OUTLIER'] == 1) & (outliers_df['OCORRENCIA_ANO'] == int(outlier_date.split('/')[1])) & (outliers_df['OCORRENCIA_MES'] == int(outlier_date.split('/')[0]))])
+
+	fig = px.choropleth_mapbox(
+		outliers, 
+		geojson=common_datasource.bairros_geojson, color="ATENDIMENTO_BAIRRO_NOME",
+		hover_data=["OCORRENCIA_ANO","OCORRENCIA_MES","OCORRENCIAS_ATENDIDAS","OCORRENCIAS_PREVISTAS"],
+		locations="ATENDIMENTO_BAIRRO_NOME", featureidkey='properties.NOME',
+		center={"lat": -25.459717, "lon": -49.278820},
+		mapbox_style="carto-positron", zoom=9)
+	fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, width=800, height=650)
+
+	marks = []
+	for idx, row in outliers_df[outliers_df['OUTLIER'] == 1].iterrows():
+		if((row['OCORRENCIA_ANO'],row['OCORRENCIA_MES']) not in marks):
+			marks.append((row['OCORRENCIA_ANO'],row['OCORRENCIA_MES']))
+		
+	marks.sort()
+
+	marks = [to_month_year_str(x) for x in marks]
+
+	return fig, marks, f'Variância total explicada pelo modelo: {str(round(stm.rsquared,2)).split(".")[1]}%'
