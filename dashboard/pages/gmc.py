@@ -168,8 +168,11 @@ def create_temporal_outlier_model_view(n_clicks, navbar_date, dates, type):
 			pad=0
 		),
 	)
-
-	return fig, f'Variância total explicada pelo modelo: {str(round(model_results.rsquared,2)).split(".")[1]}%'
+	var_exp_str = '0'
+	if(model_results.rsquared > 0):
+		var_exp_str = str(round(model_results.rsquared,2)).split(".")[1] if len(str(round(model_results.rsquared,2)).split(".")) > 1 else str(round(model_results.rsquared,2))
+	
+	return fig, f'Variância total explicada pelo modelo: {var_exp_str}%'
 
 @callback(
     Output("most_frequent_crimes", "figure"),
@@ -222,14 +225,14 @@ def create_frequent_crimes_view(n_clicks, relayoutData, dates):
 	[State("date-range-filter","value"),	
 	State("occurrence-type-select","value")]
 )
-def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):	
+def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, ocurrence_type):	
 	if ctx.triggered[0]['prop_id'] == "my-date-picker-single.value":
 		gmc_datasource.filter_by_end_date(navbar_date)
 
 	initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else gmc_datasource.getMinDate()
 	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else gmc_datasource.getMaxDate()
 
-	gmc_ref = gmc_datasource.df[(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & (gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] <= end_date)].groupby(['ATENDIMENTO_BAIRRO_NOME']).size().reset_index(name='OCORRENCIAS_ATENDIDAS').set_index('ATENDIMENTO_BAIRRO_NOME')
+	gmc_ref = gmc_datasource.df[(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & (gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] <= end_date) & (gmc_datasource.df['NATUREZA1_DESCRICAO'] == ocurrence_type)].groupby(['ATENDIMENTO_BAIRRO_NOME']).size().reset_index(name='OCORRENCIAS_ATENDIDAS').set_index('ATENDIMENTO_BAIRRO_NOME') if ocurrence_type != None else gmc_datasource.df[(gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] >= initial_date) & (gmc_datasource.df['OCORRENCIA_DATA_SEM_HORARIO'] <= end_date)].groupby(['ATENDIMENTO_BAIRRO_NOME']).size().reset_index(name='OCORRENCIAS_ATENDIDAS').set_index('ATENDIMENTO_BAIRRO_NOME')
 	gmc_ref = gmc_ref.join(common_datasource.dem)
 	gmc_ref.dropna(inplace=True)
 	gmc_ref['Ocorrências p.'] = gmc_ref['OCORRENCIAS_ATENDIDAS'] / gmc_ref['População Total']
@@ -343,4 +346,8 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 
 	marks = [to_month_year_str(x) for x in marks]
 
-	return fig, marks, f'Variância total explicada pelo modelo: {str(round(stm.rsquared,2)).split(".")[1]}%'
+	var_exp_str = '0'
+	if(stm.rsquared > 0):
+		var_exp_str = str(round(stm.rsquared,2)).split(".")[1] if len(str(round(stm.rsquared,2)).split(".")) > 1 else str(round(model_results.rsquared,2))
+	
+	return fig, marks, f'Variância total explicada pelo modelo: {var_exp_str}%'

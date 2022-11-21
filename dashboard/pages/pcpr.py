@@ -154,7 +154,11 @@ def create_temporal_outlier_model_view_pcprp(n_clicks,  navbar_date, dates, type
 		),
 	)
 
-	return fig, f'Variância total explicada pelo modelo: {str(round(model.rsquared,2)).split(".")[1]}%'
+	var_exp_str = '0'
+	if(model.rsquared > 0):
+		var_exp_str = str(round(model.rsquared,2)).split(".")[1] if len(str(round(model.rsquared,2)).split(".")) > 1 else str(round(model_results.rsquared,2))
+
+	return fig, f'Variância total explicada pelo modelo: {var_exp_str}%'
 
 @callback(
     Output("most_frequent_crimes_pcpr", "figure"),
@@ -207,14 +211,14 @@ def create_frequent_crimes_view(n_clicks, relayoutData, dates):
 	[State("date-range-filter","value"),	
 	State("occurrence-type-select","value")]
 )
-def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, type):	
+def create_spatial_outlier_model_view(n_clicks, navbar_date, dates, occurrence_type):	
 	if ctx.triggered[0]['prop_id'] == "my-date-picker-single.value":
 		pcpr_datasource.filter_by_end_date(navbar_date)
 
 	initial_date = datetime.strptime(dates[0],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else pcpr_datasource.getMinDate()
 	end_date = datetime.strptime(dates[1],'%Y-%m-%d').date() if dates != None and ctx.triggered[0]['prop_id'] == "sidebar-apply.n_clicks" else pcpr_datasource.getMaxDate()
 
-	gmc_ref = pcpr_datasource.df[(pcpr_datasource.df['data_fato'] >= initial_date) & (pcpr_datasource.df['data_fato'] <= end_date)].groupby(['descBairro']).sum().reset_index().set_index('descBairro')
+	gmc_ref = pcpr_datasource.df[(pcpr_datasource.df['data_fato'] >= initial_date) & (pcpr_datasource.df['data_fato'] <= end_date) & (pcpr_datasource.df['tipo'] == occurrence_type)].groupby(['descBairro']).sum().reset_index().set_index('descBairro') if occurrence_type != None else pcpr_datasource.df[(pcpr_datasource.df['data_fato'] >= initial_date) & (pcpr_datasource.df['data_fato'] <= end_date)].groupby(['descBairro']).sum().reset_index().set_index('descBairro')
 	gmc_ref = gmc_ref.join(common_datasource.dem)
 	gmc_ref.dropna(inplace=True)
 	gmc_ref['Ocorrências p.'] = gmc_ref['qtde_boletins'] / gmc_ref['População Total']
@@ -297,8 +301,6 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 
 	stm = smf.ols(f, data=training_data).fit()
 
-	print(stm.summary())
-
 	outliers_df = pd.DataFrame(np.concatenate((training_data.drop(columns=['lag1','lag2','lag3','lag4']).values, stm.predict().reshape((-1,1))), axis=1),
 								columns=['OCORRENCIA_ANO','OCORRENCIA_MES','ATENDIMENTO_BAIRRO_NOME','OCORRENCIAS_ATENDIDAS','OCORRENCIAS_PREVISTAS'])
 
@@ -330,4 +332,8 @@ def create_spatiotemporal_map_figure(n_clicks,outlier_date,navbar_date):
 
 	marks = [to_month_year_str(x) for x in marks]
 
-	return fig, marks, f'Variância total explicada pelo modelo: {str(round(stm.rsquared,2)).split(".")[1]}%'
+	var_exp_str = '0'
+	if(stm.rsquared > 0):
+		var_exp_str = str(round(stm.rsquared,2)).split(".")[1] if len(str(round(stm.rsquared,2)).split(".")) > 1 else str(round(stm.rsquared,2))
+
+	return fig, marks, f'Variância total explicada pelo modelo: {var_exp_str}%'
