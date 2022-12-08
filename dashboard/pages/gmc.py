@@ -133,6 +133,8 @@ def create_temporal_outlier_model_view(n_clicks, navbar_date, dates, type):
 	df_results['OUTLIER'] = df_results['Z-SCORE'].apply(lambda x: 1 if abs(x) >= 2.575 else 0)
 	df_results.rename(columns={'OCORRENCIAS_ATENDIDAS': 'Atendidas','OCORRENCIAS_PREVISTAS':'Previstas'},inplace=True)
 
+	# df_gmc_ols_model[model_features + ['OCORRENCIAS_ATENDIDAS']].assign(outlier=df_results['OUTLIER'].values, data=df_results['Data'].values, previstas=df_results['Previstas'].values).to_csv(f'./{type}_gmc_temporal_prepared.csv',index=False)
+
 	fig1 = px.line(df_results, x='Data', y=['Atendidas','Previstas'])
 	fig1.data[0].line.color = rgba(primary, .25)
 	fig1.data[1].line.color = rgba(primary, .65)
