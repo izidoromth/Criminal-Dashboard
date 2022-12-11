@@ -115,7 +115,7 @@ def create_temporal_outlier_model_view_pcprp(n_clicks,  navbar_date, dates, type
 
 	df_results['ERRO'] = df_results['PREVISTAS'] - df_results['ATENDIDAS']
 	df_results['Z-SCORE'] = (df_results['ERRO'] - df_results['ERRO'].mean())/df_results['ERRO'].std()
-	df_results['OUTLIER'] = df_results['Z-SCORE'].apply(lambda x: 1*(abs(x) >= 2.17))
+	df_results['OUTLIER'] = df_results['Z-SCORE'].apply(lambda x: 1*(abs(x) >= 2.575))
 
 	# pcpr_df[['TEMPO','LAG1','LAG2','PANDEMIA','qtde_boletins']].drop([0]).assign(outlier=df_results['OUTLIER'].values, data=df_results['Data'].values, previstas=df_results['PREVISTAS'].values).to_csv(f'./{type}_pcpr_temporal_prepared.csv', index=False)
 
