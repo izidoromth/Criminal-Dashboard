@@ -3,13 +3,10 @@ import dash_mantine_components as dmc
 from dash import callback, Input, Output, State, html, dcc
 import datetime as dt
 from components.filter_item import filter_item
-from datasources.pcpr_datasource import PcprDatasource
 from datasources.gmc_datasource import GmcDatasource
-from datasources.pcpr_datasource import PcprDatasource
 from assets.styles import navbar_datepicker
 
 gmc_datasource = GmcDatasource.instance()
-pcpr_datasource = PcprDatasource.instance()
 
 sidebar = html.Div(
 	[
@@ -33,7 +30,7 @@ sidebar = html.Div(
 				id="occurrence-type-select",
 				value=None,
 				clearable=True,
-				data=pcpr_datasource.getCrimesType(),
+				data=gmc_datasource.getCrimesType(),
 				style={'width': '220px'},
         	)]
 		),
@@ -53,7 +50,6 @@ sidebar = html.Div(
 def change_filter_datasource(href):
 	if href.split('/')[-1] == 'gmc':
 		return gmc_datasource.getCrimesType(), gmc_datasource.getMinDate(), gmc_datasource.getMaxDate(), None
-	return pcpr_datasource.getCrimesType(), pcpr_datasource.getMinDate(), pcpr_datasource.getMaxDate(), None
 
 @callback(
     Output("sidebar", "className"),

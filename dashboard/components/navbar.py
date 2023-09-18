@@ -26,7 +26,6 @@ navbar = dbc.Navbar(
 			id="open-sidebar",
 			class_name="ms-0",
 			style={'background-color':primary}),
-		dbc.NavItem(id="pcpr_navitem", children=dbc.NavLink("PCPR", href="/pcpr", class_name="text-white")),
 		dbc.NavItem(id="gmc_navitem", children=dbc.NavLink("GMC", href="/gmc", class_name="text-white")),
 		dmc.DatePicker(
 			id='my-date-picker-single',
@@ -46,14 +45,11 @@ navbar = dbc.Navbar(
 )
 
 @callback(
-	Output("pcpr_navitem","style"),
 	Output("gmc_navitem","style"),
 	Input("location_navbar","href")
 )
 def update_navbar_selected(href):
-	if 'pcpr' in href:
-		return {'background-color':secondary},{}
-	elif 'gmc' in href:
+	if 'gmc' in href:
 		return {},{'background-color':secondary}
 	else:
 		return {},{}
