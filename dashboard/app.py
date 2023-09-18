@@ -11,6 +11,7 @@
 
 import dash_bootstrap_components as dbc
 import dash
+import os
 from dash import Input, Output, State, html, dcc
 from components.navbar import navbar
 from components.filter import sidebar
@@ -29,4 +30,5 @@ app.layout = html.Div(
     className='content-full p-0')
 
 if __name__ == '__main__':
-    app.run_server(debug=False, port=8150, host='0.0.0.0')
+    port = int(os.environ.get("PORT", 8150))
+    app.run_server(debug=False, port=port, host='0.0.0.0')
